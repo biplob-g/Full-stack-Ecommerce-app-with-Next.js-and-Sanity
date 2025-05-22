@@ -15,19 +15,27 @@ const ProductGrid = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedTab, setSelectedTab] = useState(productType[0]?.title || "");
-  const query = `*[_type == "product" && variant == $variant] | order(name asc){
-  ...,"categories": categories[]->title
-}`;
-  const params = { variant: selectedTab.toLowerCase() };
 
   useEffect(() => {
+    const query = `*[_type == "product"][0...50] {
+      _id,
+      name
+    }`;
+
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await client.fetch(query, params);
-        setProducts(await response);
+        const response = await client.fetch(query);
+        console.log("Fetched products:", response);
+        if (Array.isArray(response)) {
+          setProducts(response);
+        } else {
+          console.error("Invalid response format:", response);
+          setProducts([]);
+        }
       } catch (error) {
-        console.log("Product fetching Error", error);
+        console.error("Product fetching Error:", error);
+        setProducts([]);
       } finally {
         setLoading(false);
       }
